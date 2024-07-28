@@ -1,18 +1,13 @@
-"""
-This file uses the OpenAI API functions to generate a response to the user's message.
-"""
 from openai import OpenAI
 from dotenv import load_dotenv
 import os, time, threading
-import asyncio
 
 load_dotenv()
 # Open AI API_key and assistant id
 OPEN_AI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
+openai_assistant_id = os.getenv("OPENAI_ASSISTANT_ID")
 RUN_TEMPERATURE = os.getenv("RUN_TEMPERATURE")
 
-openai_assistant_id = OPENAI_ASSISTANT_ID
 client = OpenAI(api_key=OPEN_AI_API_KEY)
 
 class Assistant:
@@ -23,18 +18,18 @@ class Assistant:
         self.thread_id = None
         self.run_id = None
 
-    async def new_thread(self):
+    def new_thread(self):
         if self.thread_id:
-            my_thread = await self.client.beta.threads.retrieve(self.thread_id)  # getting thread
+            my_thread = self.client.beta.threads.retrieve(self.thread_id)  # getting thread
             print(f"Current thread: \t\t|{my_thread.id}|\n")
         else:
-            empty_thread = await self.client.beta.threads.create()
+            empty_thread = self.client.beta.threads.create()
             self.thread_id = empty_thread.id
             print(f"Thread created: \t\t\t|{self.thread_id}|\n")
             return self.thread_id
 
-    async def new_message(self, user_message):
-        thread_message = await self.client.beta.threads.messages.create(
+    def new_message(self, user_message):
+        thread_message = self.client.beta.threads.messages.create(
             thread_id=self.thread_id,
             role="user",
             content=user_message
@@ -43,8 +38,8 @@ class Assistant:
         print(f"Adding a user message into a thread... |{self.thread_id}|")
         return user_message
 
-    async def new_run(self):
-        run = await self.client.beta.threads.runs.create(
+    def new_run(self):
+        run = self.client.beta.threads.runs.create(
             thread_id=self.thread_id,
             assistant_id=self.assistant_id,
             temperature=1
@@ -52,9 +47,9 @@ class Assistant:
         self.run_id = run.id
         print(f"\nRun Created \t\t- \t|{self.run_id}|")
 
-    async def retrieve_run(self):
+    def retrieve_run(self):
         while True:
-            run = await self.client.beta.threads.runs.retrieve(
+            run = self.client.beta.threads.runs.retrieve(
                 thread_id=self.thread_id, 
                 run_id=self.run_id,
             )
@@ -81,23 +76,22 @@ class Assistant:
                 print("Your request has expired.")
                 break
 
-            await asyncio.sleep(5)
+            time.sleep(5)
 
-    async def list_messages(self):
-        messages = await self.client.beta.threads.messages.list(
+    def list_messages(self):
+        messages = self.client.beta.threads.messages.list(
             thread_id=self.thread_id
         )
         last_message = messages.data[0].content[0].text.value
 
         print("\n<<<CHAT HISTORY>>>\n")
-        # async handle_message doing this job.   
         for message in reversed(messages.data):
             print(f"{message.role}: {message.content[0].text.value:<20}")
 
         return last_message
 
-    async def run_steps(self):
-        run_steps = await self.client.beta.threads.runs.steps.list(
+    def run_steps(self):
+        run_steps = self.client.beta.threads.runs.steps.list(
             thread_id=self.thread_id,
             run_id=self.run_id
         )
@@ -110,11 +104,11 @@ class Assistant:
 
 # Define a function to represent each request task
 def request_task(assistant_func, user_message):
-    assistant_func.new_thread() #create a thread
-    assistant_func.new_message(user_message) #add msg to thread
-    assistant_func.new_run() #create a new run
-    assistant_func.retrieve_run() #get the answer 
-    reply = assistant_func.list_messages() #show the thread history
+    assistant_func.new_thread()  # create a thread
+    assistant_func.new_message(user_message)  # add msg to thread
+    assistant_func.new_run()  # create a new run
+    assistant_func.retrieve_run()  # get the answer 
+    reply = assistant_func.list_messages()  # show the thread history
 
     return reply
 
@@ -122,11 +116,10 @@ def request_task(assistant_func, user_message):
 # This is the how works logic.
 def main() -> None:
     # ----------TEST Open AI API logic----------
-    assistant_func = Assistant()
-    thread_id = None
+    assistant_func = Assistant(client, OPENAI_ASSISTANT_ID)
     user_messages = ['hello', 'how are you?']
     
-    if len(user_messages) > 1: 
+    if len(user_messages) > 1:
         # Create threads for each request task
         threads = []
         for message in user_messages:
@@ -137,34 +130,6 @@ def main() -> None:
         # Wait for all threads to complete
         for thread in threads:
             thread.join()
-    
 
 if __name__ == '__main__':
     main()
-'''
-#Completion NOT ASSISTANT
-chat_history = [
-            {"role": "system", "content": INSTRUCTIONS},
-            
-        ]
-
-def get_response(user_request):
-    client = OpenAI()
-    chat_history.append({"role": "user", "content": user_request})
-
-    completion = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=chat_history
-        temperature=2
-      
-    )
-
-    chat_history.append({"role": "user", "content": user_request})
-    chat_history.append({"role": "assistant", "content": completion.choices[0].message.content})  
-
-    text = completion.choices[0].message.content
-    return text
-
-text = get_response("Hello, how are you?")
-print(text)
-'''
