@@ -1,0 +1,8 @@
+python-dotenv
+openai
+pytz
+
+
+psycopg2
+
+#type in termianl "pip install -r requirements.txt"
