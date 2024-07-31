@@ -6,7 +6,6 @@ from open_io import *
 load_dotenv()
 # Telegram Token and botname
 bot_token = os.getenv("TELEGRAM_TOKEN")
-bot_username: Final = os.getenv('TELEGRAM_BOT_USERNAME')
 
 # Call the class from open_ai
 assistant_func = Assistant(client, open_ai_assistant_id)
