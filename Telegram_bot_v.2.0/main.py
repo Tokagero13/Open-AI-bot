@@ -1,40 +1,43 @@
 import  os, json, aiohttp, asyncio
 from dotenv import load_dotenv
 from typing import Final
+
+import httpx
 from open_io import *
 
 load_dotenv()
 # Telegram Token and botname
 bot_token = os.getenv("TELEGRAM_TOKEN")
+bot_username: Final = os.getenv('TELEGRAM_BOT_USERNAME')
 
 # Call the class from open_ai
 assistant_func = Assistant(client, open_ai_assistant_id)
 
 # Function to collect messages from Telegram and put them into the queue
-async def listener(request_list):
+async def listener(request_list): 
     last_update_id = None 
 
-    async with aiohttp.ClientSession() as session:
+    async with httpx.AsyncClient() as client:
         while True:
             print("Waiting for message...")
             await asyncio.sleep(1)
             url = "https://api.telegram.org/bot{}/getUpdates".format(bot_token)
             params = {'offset': last_update_id} if last_update_id else {}
-            async with session.get(url, params=params) as response:
-                updates = await response.json()
+            response = await client.get(url, params=params)
+            updates = await response.json()
 
-                if 'result' in updates and updates['result']:
-                    for update in updates['result']:
-                        last_update_id = update['update_id'] + 1
-                        input = {
-                            "user_message": update
-                            }
-                        print(f"\nGET USER MESSAGE INPUT: {json.dumps(input, indent=4)}")
-                        request_list.append(input)
-                        print("Collected in the |request_list|")
-                        await asyncio.sleep(1)  # Simulate delay in collecting messages
-                else:
-                    print("No new updates.")
+            if 'result' in updates and updates['result']:
+                for update in updates['result']:
+                    last_update_id = update['update_id'] + 1
+                    input = {
+                        "user_message": update
+                        }
+                    print(f"\nGET USER MESSAGE INPUT: {json.dumps(input, indent=4)}")
+                    request_list.append(input)
+                    print("Collected in the |request_list|")
+                    await asyncio.sleep(1)  # Simulate delay in collecting messages
+            else:
+                print("No new updates.")
 
 async def test_reply(chat_id, user_message) -> dict: #AI generatin ai_message
     print("Following text ---> '{}' is processing by AI bot".format(user_message))
