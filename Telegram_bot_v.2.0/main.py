@@ -89,9 +89,9 @@ async def consumer(request_list, response_list):
                 print("Following text ---> '{}' is processing by AI bot".format(user_message))
                 print(f"\nRetrieving reply from AI for |{chat_id}| in...")
 
-                response = await reply(user_message, chat_id)
+                # response = await reply(user_message, chat_id)
 
-                # response = await test_reply(chat_id, user_message)
+                response = await test_reply(chat_id, user_message)
                 
                 response_list.append(response)
 
