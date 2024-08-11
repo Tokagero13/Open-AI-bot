@@ -1,0 +1,12 @@
+python-dotenv
+openai
+fastapi
+sqlalchemy 
+aiosqlite 
+pydantic 
+cryptography
+
+#testing
+httpx
+pytest
+#type in termianl "pip install -r requirements.txt"
