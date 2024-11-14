@@ -5,7 +5,8 @@ sqlalchemy
 aiosqlite 
 pydantic 
 cryptography
-
+aiohttp
+aiodns
 #testing
 httpx
 pytest
